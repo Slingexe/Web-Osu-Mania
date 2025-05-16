@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { toast } from "sonner";
 import { supabase } from '@/lib/auth/client';
 import { Auth } from '@supabase/auth-ui-react';
 import { ThemeSupa } from '@supabase/auth-ui-shared';
@@ -22,7 +23,6 @@ const AccountTab = () => {
       // Check if session is stored in localStorage
       const storedSession = localStorage.getItem('supabase_session');
       if (storedSession) {
-        console.log('Session loaded from localStorage');
         setSession(JSON.parse(storedSession)); // Set session from localStorage
         return;
       }
@@ -33,7 +33,6 @@ const AccountTab = () => {
           console.error('Error loading session:', error.message);
           return;
         }
-        console.log('Session loaded from supabase:', data.session); // Debug log
         setSession(data.session);
 
         // Persist session in localStorage
@@ -97,7 +96,9 @@ const AccountTab = () => {
     if (error) {
       console.error('Error saving settings:', error);
     } else {
-      console.log('Settings saved successfully!');
+      toast.message("Sync", {
+        description: "Settings saved to Supabase",
+      });
     }
   };
 
@@ -117,7 +118,9 @@ const AccountTab = () => {
 
     if (data?.settings) {
       setSettings(() => data.settings as Settings);
-      console.log('Settings loaded:', data.settings); // Debug log
+      toast.message("Sync", {
+        description: "Settings loaded from Supabase",
+      });
     }
   };
 
