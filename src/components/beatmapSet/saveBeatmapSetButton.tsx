@@ -19,37 +19,33 @@ const SaveBeatmapSetButton = ({
   beatmapSet: BeatmapSet;
   alwaysShow?: boolean;
 }) => {
-  const savedBeatmapSets = useSavedBeatmapSetsStore.use.savedBeatmapSets();
-  const setSavedBeatmapSets =
-    useSavedBeatmapSetsStore.use.setSavedBeatmapSets();
+  const savedEntries = useSavedBeatmapSetsStore.use.savedEntries();
+  const addBeatmapSet = useSavedBeatmapSetsStore.use.addBeatmapSet();
+  const removeBeatmapSet = useSavedBeatmapSetsStore.use.removeBeatmapSet();
 
-  const isSaved = savedBeatmapSets.some((set) => set.id === beatmapSet.id);
+  const isSaved =
+    savedEntries[beatmapSet.id] && !savedEntries[beatmapSet.id].removedAt;
+
+  const handleClick = () => {
+    if (isSaved) {
+      removeBeatmapSet(beatmapSet.id);
+    } else {
+      addBeatmapSet(beatmapSet);
+    }
+  };
 
   return (
     <TooltipProvider>
       <Tooltip delayDuration={0}>
         <TooltipTrigger asChild>
           <Button
-            variant={"ghost"}
-            size={"icon"}
+            variant="ghost"
+            size="icon"
             className={cn(
               "h-8 w-8 opacity-0 transition group-hover:opacity-100 focus:opacity-100",
-              (isSaved || alwaysShow) && "opacity-100",
+              (isSaved || alwaysShow) && "opacity-100"
             )}
-            onClick={() => {
-              if (isSaved) {
-                setSavedBeatmapSets((draft) => {
-                  draft.splice(
-                    draft.findIndex((set) => set.id === beatmapSet.id),
-                    1,
-                  );
-                });
-              } else {
-                setSavedBeatmapSets((draft) => {
-                  draft.push(beatmapSet);
-                });
-              }
-            }}
+            onClick={handleClick}
           >
             <Bookmark
               className="size-5"

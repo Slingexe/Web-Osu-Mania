@@ -5,7 +5,14 @@ import { useSavedBeatmapSetsStore } from "../../stores/savedBeatmapSetsStore";
 import CustomBeatmapSets from "./customBeatmapSets";
 
 const SavedBeatmapSets = ({ className }: { className?: string }) => {
-  const savedBeatmapSets = useSavedBeatmapSetsStore.use.savedBeatmapSets();
+  const savedEntries = useSavedBeatmapSetsStore.use.savedEntries();
+  const beatmapCache = useSavedBeatmapSetsStore.use.beatmapCache();
+
+  const savedBeatmapSets = Object.values(savedEntries)
+    .filter((entry) => !entry.removedAt)
+    .map((entry) => beatmapCache[entry.id])
+    .filter(Boolean);
+
 
   return (
     <CustomBeatmapSets

@@ -5,3 +5,8 @@ pages_build_output_dir = ".vercel/output/static"
 kv_namespaces = [
     { binding = "TOKENS", id = "4c393a66c157468282b7e336b1627cd6" },
 ]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "wom-dev"
+database_id = "089e970b-090f-4be2-af1f-85edf1484b48"
