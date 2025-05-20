@@ -36,7 +36,7 @@ const HighScoreToolTip = ({ highScore }: { highScore: HighScore }) => {
       return;
     }
 
-    const arrayBuffer = await replay.arrayBuffer();
+    const arrayBuffer = await replay.file.arrayBuffer();
     const uint8 = new Uint8Array(arrayBuffer);
     const decompressed = inflate(uint8);
     const json = new TextDecoder().decode(decompressed);
@@ -81,7 +81,7 @@ const HighScoreToolTip = ({ highScore }: { highScore: HighScore }) => {
           </p>
 
           <div className="mx-auto my-2 w-fit rounded-full border-x px-2 py-1 text-base font-semibold">
-            {getLetterGrade(highScore.results.accuracy)}
+            {getLetterGrade(highScore.results)}
           </div>
 
           <div className="mb-2 flex justify-around text-base">
