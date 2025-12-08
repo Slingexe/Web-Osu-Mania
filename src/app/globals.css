@@ -57,4 +57,13 @@
   body::backdrop {
     @apply bg-background text-foreground;
   }
+
+  html.capacitor-platform-android body,
+  html[data-capacitor-platform="android"] body {
+    padding-top: var(--android-safe-area-top, 0px);
+    padding-bottom: var(
+      --android-safe-area-bottom,
+      0px
+    );
+  }
 }

@@ -14,7 +14,10 @@ const config: CapacitorConfig = {
     // Allow local cleartext domains (e.g. http://10.0.2.2:3000) during debugging.
     cleartext: serverUrl.startsWith('http://')
   },
-  android: { allowMixedContent: false }
+  android: { 
+    allowMixedContent: false,
+    adjustMarginsForEdgeToEdge: 'auto',
+  }
 };
 
 export default config;

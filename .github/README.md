@@ -62,6 +62,23 @@ TRUST_CF_CONNECTING_IP=true # Set to false if not behind Cloudflare
 - Run with `npm run dev`
 - Open in browser at [http://localhost:3000](http://localhost:3000)
 
+## Development with Capacitor
+
+At the moment only android has been added, since development with IOS would require a Macbook.
+
+### Android
+
+You will need android studio or abd to test the android build.
+
+To sync and test the app run `npm run cap-a-sync`
+
+Then run one of the following commands to run
+
+`npm run cap-a-run-local` - If you are using Android Studio's emulator, if you decide to run the apk from a device with abd enabled, you will have to run the following command (`CAPACITOR_SERVER_URL=http://IP.TO.NEXTJS.SERVER:3000 npx cap run android`)
+
+`npm run cap-a-run` - Will run the dev apk pointing to `https://webosumania.com/`
+
+
 ## Disclaimer
 
 This project is not affiliated with or endorsed by osu! or its creators. All assets, including images, sounds, and any other copyrighted materials, are the property of their respective owners. The use of these assets in this project is intended for non-commercial, educational, or personal use only.

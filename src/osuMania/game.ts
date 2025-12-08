@@ -1,3 +1,5 @@
+import { Fullscreen } from "@boengli/capacitor-fullscreen";
+import { Capacitor } from "@capacitor/core";
 import {
   BeatmapData,
   Break,
@@ -154,6 +156,7 @@ export class Game {
   private retry: () => void;
 
   private finished: boolean = false;
+  private immersiveEnabled = false;
 
   public constructor(
     beatmapData: BeatmapData,
@@ -266,6 +269,7 @@ export class Game {
   }
 
   public dispose() {
+    void this.setImmersiveMode(false);
     this.inputSystem.dispose();
     this.audioSystem.dispose();
 
@@ -836,9 +840,51 @@ export class Game {
     this.app.stage.addChild(this.countdown.view);
   }
 
+  private isAndroidCapacitor() {
+    if (typeof window === "undefined") {
+      return false;
+    }
+
+    return (
+      Capacitor.isNativePlatform() && Capacitor.getPlatform() === "android"
+    );
+  }
+
+  private async setImmersiveMode(enabled: boolean) {
+    if (!this.isAndroidCapacitor()) {
+      return;
+    }
+
+    if (enabled) {
+      if (this.immersiveEnabled) {
+        return;
+      }
+      try {
+        await Fullscreen.activateImmersiveMode();
+        this.immersiveEnabled = true;
+      } catch (error) {
+        console.warn("Failed to enable immersive fullscreen", error);
+      }
+      return;
+    }
+
+    if (!this.immersiveEnabled) {
+      return;
+    }
+
+    try {
+      await Fullscreen.deactivateImmersiveMode();
+    } catch (error) {
+      console.warn("Failed to disable immersive fullscreen", error);
+    } finally {
+      this.immersiveEnabled = false;
+    }
+  }
+
   public pause() {
     this.song.pause();
     this.state = "PAUSE";
+    void this.setImmersiveMode(false);
   }
 
   public async play() {
@@ -855,10 +901,12 @@ export class Game {
     } else {
       this.song.play();
       this.state = "PLAY";
+      void this.setImmersiveMode(true);
     }
   }
 
   private async finish() {
+    void this.setImmersiveMode(false);
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
     this.scoreSystem.score = Math.round(this.scoreSystem.score);
@@ -886,6 +934,7 @@ export class Game {
 
   private async fail() {
     this.song.stop();
+    void this.setImmersiveMode(false);
 
     if (this.settings.retryOnFail) {
       this.retry();
