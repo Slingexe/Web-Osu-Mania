@@ -5,7 +5,7 @@ import { combine, persist } from "zustand/middleware";
 import { immer } from "zustand/middleware/immer";
 
 export const BEATMAP_API_PROVIDERS = {
-  "Mino (catboy.best)": "https://catboy.best/d/$setIdn",
+  "Mino (catboy.best)": "https://catboy.best/d/$setId",
   NeriNyan: "https://api.nerinyan.moe/d/$setId",
   SayoBot: "https://dl.sayobot.cn/beatmaps/download/$setId",
 } as const;
@@ -93,8 +93,19 @@ export const COVER_TYPE_LABELS: Record<CoverType, string> = {
 
 export type ColumnColor = {
   tap: string;
+  holdHead: string;
   hold: string;
 };
+
+export type JudgementCounterPosition = "left" | "right";
+export const judgementCounterOptions: {
+  id: JudgementCounterPosition | null;
+  label: string;
+}[] = [
+  { id: null, label: "Off" },
+  { id: "left", label: "Left Side" },
+  { id: "right", label: "Right Side" },
+] as const;
 
 export type Settings = {
   version: number;
@@ -104,6 +115,10 @@ export type Settings = {
   scrollSpeed: number;
   backgroundDim: number;
   backgroundBlur: number;
+  backgroundVideo: {
+    // There may be more options to convert FLV and AVI later
+    enabled: boolean;
+  };
   show300g: boolean;
   showErrorBar: boolean;
   audioOffset: number;
@@ -128,6 +143,7 @@ export type Settings = {
   stagePosition: number;
   laneWidthAdjustment: number;
   touch: {
+    enabled: boolean;
     mode: TouchMode;
     borderOpacity: number;
   };
@@ -136,6 +152,11 @@ export type Settings = {
     pause: string | null;
     retry: string | null;
   };
+  /**
+   * When adding mods, don't forget to
+   * 1. Add the mod strings to getModStrings()
+   * 2. Make necessary changes to replay.ts so the mod is stored in replays properly
+   */
   mods: {
     autoplay: boolean;
     easy: boolean;
@@ -147,6 +168,8 @@ export type Settings = {
     holdOff: boolean;
     noFail: boolean;
     suddenDeath: boolean;
+    perfect: boolean;
+    perfectSs: boolean;
     hpOverride: number | null;
     odOverride: number | null;
     cover: {
@@ -163,6 +186,7 @@ export type Settings = {
     showProgressBar: boolean;
     showHealthBar: boolean;
     receptorOpacity: number;
+    judgementCounter: JudgementCounterPosition | null;
   };
   skin: {
     colors: {
@@ -184,6 +208,9 @@ export const defaultSettings: Settings = {
   scrollSpeed: 20,
   backgroundDim: 0.75,
   backgroundBlur: 0,
+  backgroundVideo: {
+    enabled: true,
+  },
   show300g: true,
   showErrorBar: true,
   audioOffset: 0,
@@ -208,6 +235,7 @@ export const defaultSettings: Settings = {
   stagePosition: 0,
   laneWidthAdjustment: 0,
   touch: {
+    enabled: true,
     mode: "normal",
     borderOpacity: 0.1,
   },
@@ -385,6 +413,8 @@ export const defaultSettings: Settings = {
     noFail: false,
     hardRock: false,
     suddenDeath: false,
+    perfect: false,
+    perfectSs: false,
     autoplay: false,
     random: false,
     mirror: false,
@@ -404,6 +434,7 @@ export const defaultSettings: Settings = {
     showProgressBar: true,
     showHealthBar: true,
     receptorOpacity: 1,
+    judgementCounter: "right",
   },
   skin: {
     colors: {
@@ -487,6 +518,12 @@ function fillCallback(settings: Settings) {
     ...defaultSettings.skin,
     ...settings.skin,
   };
+
+  filledSettings.skin.colors.custom.forEach((colorSet) => {
+    if (!colorSet[0].holdHead) {
+      colorSet.forEach((color) => (color.holdHead = color.tap));
+    }
+  });
 
   for (let i = 9; i < 18; i++) {
     if (!filledSettings.keybinds.keyModes[i]) {

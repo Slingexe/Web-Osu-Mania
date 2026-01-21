@@ -43,6 +43,7 @@ import { BarHold } from "./sprites/hold/barHold";
 import { CircleHold } from "./sprites/hold/circleHold";
 import { DiamondHold } from "./sprites/hold/diamondHold";
 import { Judgement } from "./sprites/judgement";
+import { JudgementCounter } from "./sprites/judgementCounter";
 import { ArrowKey } from "./sprites/key/arrowKey";
 import { BarKey } from "./sprites/key/barKey";
 import { CircleKey } from "./sprites/key/circleKey";
@@ -73,6 +74,7 @@ export class Game {
   public state: GameState = "WAIT";
 
   public settings: Settings;
+  public mods: Settings["mods"];
   public difficulty: Difficulty;
   public columnKeybinds: (string | null)[];
   public hitWindows: HitWindows;
@@ -131,6 +133,7 @@ export class Game {
   public touchHitboxes?: TouchHitboxes;
   public stageHint: StageHint;
   public judgement?: Judgement;
+  public judgementCounter?: JudgementCounter;
   private progressBar?: ProgressBar;
   public healthBar?: HealthBar;
   public errorBar?: ErrorBar;
@@ -139,6 +142,9 @@ export class Game {
 
   public song: Howl;
   public timeElapsed: number = 0;
+  private delay: number;
+
+  public videoEl: HTMLVideoElement | null;
 
   public startTime: number;
   public endTime: number;
@@ -163,6 +169,7 @@ export class Game {
     setIsPaused: Dispatch<SetStateAction<boolean>>,
     replayData: ReplayData | null,
     retry: () => void,
+    videoEl: HTMLVideoElement | null,
   ) {
     this.resize = this.resize.bind(this);
     this.hitObjects = beatmapData.hitObjects;
@@ -177,11 +184,13 @@ export class Game {
     this.nextTimingPoint = this.timingPoints[1];
 
     this.settings = useSettingsStore.getState();
+    this.mods = this.settings.mods; // Replays will override this
 
     if (this.settings.skin.colors.mode === "simple") {
-      this.laneColors = getAllLaneColors(this.settings.skin.colors.simple.hue)[
-        this.difficulty.keyCount - 1
-      ];
+      this.laneColors = getAllLaneColors(
+        this.settings.skin.colors.simple.hue,
+        this.settings.darkerHoldNotes,
+      )[this.difficulty.keyCount - 1];
     } else {
       this.laneColors =
         this.settings.skin.colors.custom[this.difficulty.keyCount - 1];
@@ -244,27 +253,34 @@ export class Game {
       this.settings.keybinds.keyModes[this.difficulty.keyCount - 1];
 
     if (replayData) {
-      this.settings.mods = decodeMods(replayData.mods);
+      this.mods = decodeMods(replayData.mods);
 
       this.replayPlayer = new ReplayPlayer(this, replayData);
-    } else if (!this.settings.mods.autoplay) {
+    } else if (!this.mods.autoplay) {
       this.replayRecorder = new ReplayRecorder(this, beatmapData);
     }
 
     this.scoreSystem = new ScoreSystem(this, this.hitObjects.length);
     this.inputSystem = new InputSystem(this);
     this.audioSystem = new AudioSystem(this, beatmapData.sounds);
-    if (!this.settings.mods.noFail) {
+    if (!this.mods.noFail) {
       this.healthSystem = new HealthSystem(this);
     }
 
     this.song = beatmapData.song.howl;
     this.song.volume(this.settings.musicVolume);
-    this.song.rate(this.settings.mods.playbackRate);
+    this.song.rate(this.mods.playbackRate);
     this.song.on("end", async () => {
       // Seek back to the end so the progress bar stays full
       this.song.seek(this.song.duration());
     });
+
+    this.videoEl = videoEl;
+    if (videoEl) {
+      videoEl.playbackRate = this.mods.playbackRate;
+    }
+
+    this.delay = beatmapData.delay;
   }
 
   public dispose() {
@@ -340,6 +356,8 @@ export class Game {
 
     this.judgement?.resize();
 
+    this.judgementCounter?.resize();
+
     if (this.comboText) {
       this.comboText.x = this.app.screen.width / 2 + this.stagePositionOffset;
 
@@ -408,9 +426,9 @@ export class Game {
       resolution: window.devicePixelRatio,
       eventMode: "none",
       eventFeatures: {
-        move: true,
+        move: this.settings.touch.enabled,
         globalMove: false,
-        click: true,
+        click: this.settings.touch.enabled,
         wheel: false,
       },
     });
@@ -460,13 +478,18 @@ export class Game {
 
     this.addKeys();
 
-    if (!this.replayPlayer) {
+    if (!this.replayPlayer && this.settings.touch.enabled) {
       this.addTouchHitboxes();
     }
 
     if (this.settings.ui.showJudgement) {
       this.addJudgement();
     }
+
+    if (this.settings.ui.judgementCounter !== null) {
+      this.addJudgementCounter();
+    }
+
     this.addHitObjects();
 
     if (this.settings.ui.showProgressBar) {
@@ -484,7 +507,7 @@ export class Game {
       this.addHitError();
     }
 
-    if (!this.settings.mods.noFail && this.settings.ui.showHealthBar) {
+    if (!this.mods.noFail && this.settings.ui.showHealthBar) {
       this.addHealthBar();
     }
 
@@ -524,9 +547,19 @@ export class Game {
       case "PLAY":
         this.timeElapsed = Math.round(this.song.seek() * 1000);
 
+        // Play video if it exists, accounting for audio delay
+        if (
+          this.videoEl &&
+          this.videoEl.paused &&
+          this.timeElapsed > this.delay
+        ) {
+          this.videoEl.currentTime = this.song.seek();
+          this.videoEl.play();
+        }
+
         this.replayPlayer?.update();
 
-        if (!this.settings.mods.autoplay) {
+        if (!this.mods.autoplay) {
           this.stageLights.forEach((stageLight) => stageLight.update());
           this.keys.forEach((key) => key.update());
         }
@@ -746,7 +779,7 @@ export class Game {
       this.stageContainer.scale.y = -1;
     }
 
-    if (this.settings.mods.cover) {
+    if (this.mods.cover) {
       this.stageCover = new StageCover(this);
       this.notesContainer.addChild(this.stageCover.view);
     }
@@ -817,6 +850,11 @@ export class Game {
     this.app.stage.addChild(this.judgement.view);
   }
 
+  private addJudgementCounter() {
+    this.judgementCounter = new JudgementCounter(this);
+    this.app.stage.addChild(this.judgementCounter.view);
+  }
+
   private addFpsCounter() {
     this.fps = new Fps(this);
     this.app.stage.addChild(this.fps.view);
@@ -851,6 +889,7 @@ export class Game {
   }
 
   public pause() {
+    this.videoEl?.pause();
     this.song.pause();
     this.state = "PAUSE";
   }
@@ -867,6 +906,11 @@ export class Game {
 
       this.state = "UNPAUSE";
     } else {
+      if (this.videoEl) {
+        this.videoEl.currentTime = this.song.seek();
+        this.videoEl.play();
+      }
+
       this.song.play();
       this.state = "PLAY";
     }
@@ -900,6 +944,7 @@ export class Game {
 
   private async fail() {
     this.song.stop();
+    this.videoEl?.pause();
 
     if (this.settings.retryOnFail) {
       this.retry();
@@ -934,12 +979,11 @@ export class Game {
   // Returns the px offset of the hit object from the judgement line based on
   // how long it should take to reach the line
   public getHitObjectOffset(startTime: number, endTime: number) {
-    if (this.settings.mods.constantSpeed) {
+    if (this.mods.constantSpeed) {
       const speed =
         this.hitPosition / (MAX_TIME_RANGE / this.settings.scrollSpeed);
 
-      const offset =
-        ((endTime - startTime) * speed) / this.settings.mods.playbackRate;
+      const offset = ((endTime - startTime) * speed) / this.mods.playbackRate;
 
       return offset;
     }
@@ -968,7 +1012,7 @@ export class Game {
         const speed =
           this.hitPosition / (MAX_TIME_RANGE / currentTimingPoint.scrollSpeed);
 
-        totalOffset += (duration * speed) / this.settings.mods.playbackRate;
+        totalOffset += (duration * speed) / this.mods.playbackRate;
       }
     }
 

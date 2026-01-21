@@ -40,6 +40,11 @@ export type Difficulty = {
   hp: number;
 };
 
+export type Events = {
+  videoUrl: string | null;
+  breaks: Break[];
+};
+
 export const sampleSets = ["default", "normal", "soft", "drum"] as const;
 export type SampleSet = (typeof sampleSets)[number];
 
@@ -76,6 +81,7 @@ export type TapData = {
   endTime: number;
   hitSound: HitSound;
   hitSample: HitSample;
+  isHoldHead: boolean;
 };
 
 export type HoldData = {
@@ -106,7 +112,9 @@ export interface BeatmapData {
   columnMap?: number[];
   hitWindows: HitWindows;
   song: Required<Sound>;
+  delay: number;
   backgroundUrl: string | null;
+  videoUrl: string | null;
   metadata: Metadata;
   difficulty: Difficulty;
   sounds: SoundDictionary;
@@ -168,7 +176,7 @@ export const parseOsz = async (
     mods,
   );
 
-  const breaks = parseBreaks(lines, delay);
+  const { videoUrl, breaks } = await parseEvents(lines, entries, delay);
 
   const hitWindows = getHitWindows(difficulty.od, mods);
 
@@ -271,7 +279,9 @@ export const parseOsz = async (
     columnMap,
     hitWindows,
     song,
+    delay,
     backgroundUrl,
+    videoUrl,
     metadata,
     difficulty,
     sounds,
@@ -343,6 +353,7 @@ export function parseHitObjects(
       hitSound,
       hitSample,
       endTime: isHoldNote && !mods.holdOff ? parseInt(sampleSet[0]) : time,
+      isHoldHead: isHoldNote,
     });
 
     if (isHoldNote && !mods.holdOff) {
@@ -431,14 +442,48 @@ function parseDifficulty(lines: string[]): Difficulty {
   return { keyCount, od, hp };
 }
 
-function parseBreaks(lines: string[], delay: number): Break[] {
+async function parseEvents(
+  lines: string[],
+  entries: Entry[],
+  delay: number,
+): Promise<Events> {
   const startIndex = lines.indexOf("[Events]") + 1;
   const endIndex = lines.findIndex((line, i) => line === "" && i > startIndex);
 
   const eventLines = lines.slice(startIndex, endIndex);
+
+  // Parse video
+  let videoUrl: string | null = null;
+
+  if (useSettingsStore.getState().backgroundVideo.enabled) {
+    const videoLine = lines.find(
+      (line) => line.startsWith("Video,") || line.startsWith("1,"),
+    );
+
+    if (videoLine) {
+      const [_, startTime, filename, xOffset, yOffset] = videoLine.split(",");
+
+      // Remove quotes
+      const parsedFilename = filename.slice(1, -1);
+
+      if (parsedFilename.endsWith(".mp4")) {
+        const videoEntry = findEntry(entries, parsedFilename);
+
+        if (videoEntry) {
+          const videoBlob = await videoEntry.getData!(
+            new BlobWriter("video/mp4"),
+          );
+
+          videoUrl = URL.createObjectURL(videoBlob);
+        }
+      }
+    }
+  }
+
+  // Parse breaks
   const breakLines = eventLines.filter((line) => line.startsWith("2,"));
 
-  return breakLines.map((line) => {
+  const breaks = breakLines.map((line) => {
     const [_, startTime, endTime] = line.split(",");
 
     return {
@@ -446,6 +491,11 @@ function parseBreaks(lines: string[], delay: number): Break[] {
       endTime: parseInt(endTime) + delay,
     };
   });
+
+  return {
+    videoUrl: videoUrl,
+    breaks,
+  };
 }
 
 function parseTimingPoints(
@@ -463,8 +513,10 @@ function parseTimingPoints(
   const settings = useSettingsStore.getState();
   const baseScrollSpeed = settings.scrollSpeed;
 
+  const timingPoints: TimingPoint[] = [];
+
   // https://osu.ppy.sh/wiki/en/Client/File_formats/osu_%28file_format%29#timing-points
-  const timingPoints: TimingPoint[] = timingPointLines.map((line, i) => {
+  for (const line of timingPointLines) {
     const [
       time,
       beatLength,
@@ -476,8 +528,16 @@ function parseTimingPoints(
       effects,
     ] = line.split(",").map((value) => Number(value));
 
+    const isFirstTimingPoint = line === timingPointLines[0];
+    const adjustedTime = isFirstTimingPoint ? 0 : time + delay;
+
+    if (adjustedTime > endTime) {
+      // This and subsequent timing points are past the last hit object and therefore invalid
+      break;
+    }
+
     const timingPoint: TimingPoint = {
-      time: i === 0 ? 0 : time + delay,
+      time: adjustedTime,
       beatLength,
       meter,
       sampleSet: sampleSets[sampleSet],
@@ -487,8 +547,8 @@ function parseTimingPoints(
       scrollSpeed: baseScrollSpeed,
     };
 
-    return timingPoint;
-  });
+    timingPoints.push(timingPoint);
+  }
 
   if (!mods.constantSpeed) {
     const mostCommonBeatLength = getMostCommonBeatLength(
