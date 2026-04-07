@@ -6,11 +6,13 @@ import { toast } from "sonner";
 import type {
   EarlyLateThreshold,
   JudgementCounterPosition,
+  ProgressDisplay,
   TouchMode,
 } from "../../stores/settingsStore";
 import {
   earlyLateThresholdOptions,
   judgementCounterOptions,
+  progressDisplayOptions,
   touchModes,
   useSettingsStore,
 } from "../../stores/settingsStore";
@@ -311,6 +313,26 @@ const SettingsTab = () => {
           step={0.01}
         />
         <SliderInput
+          label="Stage HUD Vertical Position"
+          settingPath="ui.stageHudYPosition"
+          tooltip={(stageHudYPosition) =>
+            `${Math.round(stageHudYPosition * 100)}%`
+          }
+          onValueChange={([stageHudYPosition]) =>
+            setSettings((draft) => {
+              draft.ui.stageHudYPosition = stageHudYPosition;
+            })
+          }
+          min={0.3}
+          max={0.9}
+          step={0.01}
+        />
+
+        <p className="text-muted-foreground text-sm">
+          The Stage HUD includes the judgement indicator and combo counter.
+        </p>
+
+        <SliderInput
           label="Hit Position"
           settingPath="hitPositionOffset"
           tooltip={(hitPositionOffset) => `${hitPositionOffset}px`}
@@ -406,6 +428,7 @@ const SettingsTab = () => {
           max={1}
           step={0.01}
         />
+
         <SwitchInput
           label="Upscroll (DDR Style)"
           settingPath="upscroll"
@@ -515,15 +538,29 @@ const SettingsTab = () => {
           ))}
         </SelectInput>
 
-        <SwitchInput
-          label="Show Progress Bar"
-          settingPath="ui.showProgressBar"
-          onCheckedChange={(checked) =>
+        <SelectInput
+          label="Progress Display"
+          settingPath="ui.progressDisplay"
+          onValueChange={(value: ProgressDisplay | typeof NULL_OPTION) =>
             setSettings((draft) => {
-              draft.ui.showProgressBar = checked;
+              if (value === NULL_OPTION) {
+                draft.ui.progressDisplay = null;
+              } else {
+                draft.ui.progressDisplay = value;
+              }
             })
           }
-        />
+        >
+          {progressDisplayOptions.map((option) => (
+            <SelectItem
+              key={option.id}
+              value={option.id?.toString() ?? NULL_OPTION}
+            >
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectInput>
+
         <SwitchInput
           label="Show Health Bar"
           settingPath="ui.showHealthBar"

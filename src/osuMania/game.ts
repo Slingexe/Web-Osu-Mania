@@ -49,6 +49,7 @@ import { CircleKey } from "./sprites/key/circleKey";
 import { DiamondKey } from "./sprites/key/diamondKey";
 import type { Key } from "./sprites/key/key";
 import { ProgressBar } from "./sprites/progressBar";
+import { ProgressPie } from "./sprites/progressPie";
 import { StageCover } from "./sprites/stageCover";
 import { StageHint } from "./sprites/stageHint";
 import { StageLight } from "./sprites/stageLight";
@@ -135,7 +136,7 @@ export class Game {
   public stageHint: StageHint;
   public judgement?: Judgement;
   public judgementCounter?: JudgementCounter;
-  private progressBar?: ProgressBar;
+  private progress?: ProgressBar | ProgressPie;
   public healthBar?: HealthBar;
   public errorBar?: ErrorBar;
   private fps?: Fps;
@@ -372,9 +373,12 @@ export class Game {
       this.comboText.x = this.app.screen.width / 2 + this.stagePositionOffset;
 
       if (this.settings.upscroll) {
-        this.comboText.y = (this.app.screen.height * 2) / 3;
+        this.comboText.y =
+          this.app.screen.height * this.settings.ui.stageHudYPosition;
       } else {
-        this.comboText.y = this.app.screen.height / 3 + 50;
+        this.comboText.y =
+          this.app.screen.height * (1 - this.settings.ui.stageHudYPosition) +
+          50;
       }
     }
 
@@ -387,7 +391,7 @@ export class Game {
       this.scoreText.x = this.app.screen.width - 30;
       this.scoreText.scale = Math.min((this.app.screen.width - 60) / 400, 1);
     }
-    this.progressBar?.resize();
+    this.progress?.resize();
     this.healthBar?.resize();
     if (this.accuracyText) {
       this.accuracyText.x = this.app.screen.width - 30;
@@ -411,7 +415,7 @@ export class Game {
       this.comboText,
       this.accuracyText,
       this.judgementCounter,
-      this.progressBar,
+      this.progress,
       this.healthBar,
       this.errorBar,
       this.fps,
@@ -532,7 +536,7 @@ export class Game {
 
     this.addHitObjects();
 
-    if (this.settings.ui.showProgressBar) {
+    if (this.settings.ui.progressDisplay !== null) {
       this.addProgressBar();
     }
     this.addStartMessage();
@@ -620,11 +624,7 @@ export class Game {
             ];
         }
 
-        this.progressBar?.update(
-          this.timeElapsed,
-          this.startTime,
-          this.endTime,
-        );
+        this.progress?.update(this.timeElapsed, this.startTime, this.endTime);
 
         if (this.timeElapsed > this.endTime && !this.finished) {
           this.finished = true;
@@ -710,9 +710,13 @@ export class Game {
   }
 
   private addProgressBar() {
-    this.progressBar = new ProgressBar(this);
+    if (this.settings.ui.progressDisplay === "bar") {
+      this.progress = new ProgressBar(this);
+    } else {
+      this.progress = new ProgressPie(this);
+    }
 
-    this.app.stage.addChild(this.progressBar.view);
+    this.app.stage.addChild(this.progress.view);
   }
 
   private addHealthBar() {
