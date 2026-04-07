@@ -121,9 +121,9 @@ const BeatmapSetsInfiniteScroll = ({
                 Otherwise, please be patient and come back in a few hours.
               </p>
               <p>
-                You may also play on Sling's mirror site (
-                <TextLink to={"https://wom.slingexe.com/"} target="_blank">
-                  wom.slingexe.com
+                You may also play on the official site (
+                <TextLink to={"https://webosumania.com/"} target="_blank">
+                  webosumania.com
                 </TextLink>
                 ) . Transfer your data over using the backup and restore feature
                 in the settings.
