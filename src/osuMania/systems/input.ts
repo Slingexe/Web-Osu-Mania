@@ -3,6 +3,7 @@ import type { Game } from "../game";
 export class InputSystem {
   private game: Game;
   private keybindsMap: Map<string, number>;
+  private columnPressedKeybinds: Set<string>[];
 
   public gamepadState: boolean[] = [];
 
@@ -16,6 +17,11 @@ export class InputSystem {
     this.game = game;
     this.keybindsMap = new Map();
     this.initKeybindsMap();
+
+    this.columnPressedKeybinds = Array.from(
+      { length: this.game.difficulty.keyCount },
+      () => new Set(),
+    );
 
     this.tappedColumns = new Array(this.game.difficulty.keyCount).fill(false);
     this.pressedColumns = new Array(this.game.difficulty.keyCount).fill(false);
@@ -36,9 +42,12 @@ export class InputSystem {
   private initKeybindsMap() {
     const keybinds =
       this.game.settings.keybinds.keyModes[this.game.difficulty.keyCount - 1];
-    keybinds.forEach((key, index) => {
-      if (key) {
-        this.keybindsMap.set(key, index);
+    keybinds.forEach(([keybind1, keybind2], index) => {
+      if (keybind1) {
+        this.keybindsMap.set(keybind1, index);
+      }
+      if (keybind2) {
+        this.keybindsMap.set(keybind2, index);
       }
     });
   }
@@ -112,9 +121,15 @@ export class InputSystem {
       }
 
       if (button.pressed && !this.gamepadState[i]) {
-        this.hit(column);
+        this.columnPressedKeybinds[column].add(`🎮Btn${i}`);
+        if (this.columnPressedKeybinds[column].size === 1) {
+          this.hit(column);
+        }
       } else if (!button.pressed && this.gamepadState[i]) {
-        this.release(column);
+        this.columnPressedKeybinds[column].delete(`🎮Btn${i}`);
+        if (this.columnPressedKeybinds[column].size === 0) {
+          this.release(column);
+        }
       }
     });
 
@@ -143,7 +158,12 @@ export class InputSystem {
       return;
     }
 
-    this.hit(column);
+    this.columnPressedKeybinds[column].add(event.code);
+    console.log(column, this.columnPressedKeybinds[column].size);
+
+    if (this.columnPressedKeybinds[column].size === 1) {
+      this.hit(column);
+    }
   }
 
   private handleKeyUp(event: KeyboardEvent) {
@@ -156,7 +176,10 @@ export class InputSystem {
       return;
     }
 
-    this.release(column);
+    this.columnPressedKeybinds[column].delete(event.code);
+    if (this.columnPressedKeybinds[column].size === 0) {
+      this.release(column);
+    }
   }
 
   public anyColumnTapped() {
