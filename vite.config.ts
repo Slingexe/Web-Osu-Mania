@@ -16,7 +16,7 @@ export default defineConfig({
     host: "0.0.0.0",
     port: 5000,
     strictPort: true,
-    allowedHosts: ["wom.slingexe.com", "wom.slingexe.me],
+    allowedHosts: ["wom.slingexe.com", "wom.slingexe.me"],
   },
   plugins: [
     cloudflare({ viteEnvironment: { name: "ssr" } }),
