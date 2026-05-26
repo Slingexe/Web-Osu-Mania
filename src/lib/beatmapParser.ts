@@ -115,6 +115,7 @@ export interface BeatmapData {
   metadata: Metadata;
   difficulty: Difficulty;
   sounds: SoundDictionary;
+  audioOffset: number;
 }
 
 export const parseOsz = async (
@@ -142,7 +143,7 @@ export const parseOsz = async (
   for (const entry of osuEntries) {
     const text = await entry.getData(new TextWriter());
 
-    if (pattern.test(text)) {
+    if (pattern.test(text) || text.includes(`BeatmapID:${beatmap.id}`)) {
       osuFileData = text;
       break;
     }
@@ -296,6 +297,7 @@ export const parseOsz = async (
     metadata,
     difficulty,
     sounds,
+    audioOffset,
   };
 };
 
@@ -303,7 +305,8 @@ function findEntry(entries: Entry[], filename: string) {
   const lowercaseFilename = filename.toLowerCase();
   return entries.find(
     (entry) =>
-      entry.filename.toLowerCase() === lowercaseFilename && !entry.directory,
+      entry.filename.toLowerCase().endsWith(lowercaseFilename) &&
+      !entry.directory,
   ) as FileEntry;
 }
 

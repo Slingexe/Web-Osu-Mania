@@ -1,5 +1,7 @@
 import type { BeatmapData } from "@/lib/beatmapParser";
+import { cn } from "@/lib/utils";
 import { Game } from "@/osuMania/game";
+import type { ReplayData } from "@/osuMania/systems/replayRecorder";
 import { useSettingsStore } from "@/stores/settingsStore";
 import type { PlayResults } from "@/types";
 import type { Dispatch, RefObject, SetStateAction } from "react";
@@ -7,18 +9,21 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useGameStore } from "../../stores/gameStore";
 import PauseButton from "./pauseButton";
 import PauseScreen from "./pauseScreen";
+import ReplayControls from "./replayControls";
 import ResultsScreen from "./resultsScreen";
 import RetryWidget from "./retryWidget";
 import VolumeWidget from "./volumeWidget";
 
 const GameScreens = ({
   beatmapData,
+  replayData,
   retry,
   videoRef,
   showHud,
   setShowHud,
 }: {
   beatmapData: BeatmapData;
+  replayData: ReplayData | null;
   retry: () => void;
   videoRef: RefObject<HTMLVideoElement | null>;
   showHud: boolean;
@@ -26,10 +31,10 @@ const GameScreens = ({
 }) => {
   const beatmapId = useGameStore.use.beatmapId();
   const keybinds = useSettingsStore.use.keybinds();
-  const replayData = useGameStore.use.replayData();
   const [game, setGame] = useState<Game | null>(null);
   const [isPaused, setIsPaused] = useState(false);
   const [results, setResults] = useState<PlayResults | null>(null);
+  const [hideCursor, setHideCursor] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null!);
   const initialShowHud = useRef(showHud);
 
@@ -98,9 +103,21 @@ const GameScreens = ({
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.code === keybinds.toggleHud && !event.repeat) {
+      if (event.repeat) {
+        return;
+      }
+
+      if (event.code !== "Escape") {
+        setHideCursor(true);
+      }
+
+      if (event.code === keybinds.toggleHud) {
         toggleHud();
       }
+    };
+
+    const handleMouseMove = () => {
+      setHideCursor(false);
     };
 
     const handleVisibilityChange = (event: Event) => {
@@ -110,20 +127,29 @@ const GameScreens = ({
     };
 
     addEventListener("keydown", handleKeyDown);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
+    addEventListener("mousemove", handleMouseMove);
+    addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       removeEventListener("keydown", handleKeyDown);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      removeEventListener("mousemove", handleMouseMove);
+      removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [keybinds, results, toggleHud]);
 
   return (
     <>
-      <div ref={containerRef} className="absolute h-full w-full">
+      <div
+        ref={containerRef}
+        className={cn(
+          "absolute h-full w-full",
+          hideCursor && !results && "cursor-none",
+        )}
+      >
         {game && !results && <VolumeWidget game={game} />}
         {game && !results && <RetryWidget retry={retry} />}
         {game && !results && <PauseButton setIsPaused={setIsPaused} />}
+        {game && !results && replayData && <ReplayControls game={game} />}
 
         {isPaused && game && (
           <PauseScreen

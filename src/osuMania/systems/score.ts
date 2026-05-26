@@ -59,13 +59,25 @@ export class ScoreSystem {
     isForHold?: boolean,
   ) {
     // Ignore if health is at 0
-    if (this.game.healthSystem?.health === MIN_HEALTH) {
+    if (
+      this.game.healthSystem?.health === MIN_HEALTH &&
+      !this.game.mods.noFail
+    ) {
       return;
     }
 
     this.score += this.getScoreToAdd(judgement);
 
+    const oldHealth = this.game.healthSystem?.health ?? 0;
     this.game.healthSystem?.hit(judgement, isForHold);
+    if (
+      this.game.healthSystem &&
+      this.game.healthBar &&
+      this.game.healthSystem.health !== oldHealth
+    ) {
+      const lostHealth = this.game.healthSystem.health < oldHealth;
+      this.game.healthBar.setHealth(this.game.healthSystem.health, lostHealth);
+    }
 
     this[judgement]++;
 
@@ -118,6 +130,14 @@ export class ScoreSystem {
       (this[320] + this[300] + this[200] + this[100] + this[50] + this[0]);
 
     this.accuracy = accuracyWeight / highestPossibleAccuracyWeight;
+
+    if (
+      this.game.healthSystem &&
+      this.game.mods.accuracyChallenge?.mode === "standard" &&
+      this.accuracy < this.game.mods.accuracyChallenge.minAccuracy
+    ) {
+      this.game.healthSystem.health = MIN_HEALTH; // Instant fail
+    }
 
     if (this.game.accuracyText) {
       this.game.accuracyText.text = `${(this.accuracy * 100).toFixed(2)}%`;

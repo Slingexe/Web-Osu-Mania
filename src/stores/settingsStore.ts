@@ -138,6 +138,15 @@ export const progressDisplayOptions: {
   { id: "pie", label: "Pie" },
 ] as const;
 
+export type AccuracyChallengeMode = "maxAchievable" | "standard";
+export const accuracyChallengeModeOptions: {
+  id: AccuracyChallengeMode;
+  label: string;
+}[] = [
+  { id: "maxAchievable", label: "Maximum Achievable" },
+  { id: "standard", label: "Standard" },
+] as const;
+
 export type Settings = {
   version: number;
   volume: number;
@@ -213,6 +222,10 @@ export type Settings = {
     suddenDeath: boolean;
     perfect: boolean;
     perfectSs: boolean;
+    accuracyChallenge: {
+      minAccuracy: number;
+      mode: AccuracyChallengeMode;
+    } | null;
     hpOverride: number | null;
     odOverride: number | null;
     cover: {
@@ -533,6 +546,7 @@ export const defaultSettings: Settings = {
     suddenDeath: false,
     perfect: false,
     perfectSs: false,
+    accuracyChallenge: null,
     autoplay: false,
     random: false,
     mirror: false,
@@ -552,7 +566,7 @@ export const defaultSettings: Settings = {
     earlyLateThreshold: 200,
     showProgressBar: true,
     showHealthBar: true,
-    receptorOpacity: 0.5,
+    receptorOpacity: 1,
     judgementCounter: "right",
     progressDisplay: "bar",
     stageHudYPosition: 0.66,
