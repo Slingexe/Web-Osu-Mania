@@ -8,7 +8,7 @@ import type {
   TimingPoint,
 } from "@/lib/beatmapParser";
 import { decodeMods } from "@/lib/replay";
-import { BASE_PATH, scaleWidth } from "@/lib/utils";
+import { BASE_PATH, patchLaneColors, scaleWidth } from "@/lib/utils";
 import type { ColumnColor, Settings } from "@/stores/settingsStore";
 import { useSettingsStore } from "@/stores/settingsStore";
 import type { Column, GameState, PlayResults } from "@/types";
@@ -42,7 +42,6 @@ import { ArrowHold } from "./sprites/hold/arrowHold";
 import { BarHold } from "./sprites/hold/barHold";
 import { CircleHold } from "./sprites/hold/circleHold";
 import { DiamondHold } from "./sprites/hold/diamondHold";
-import { Hold } from "./sprites/hold/hold";
 import { Judgement } from "./sprites/judgement";
 import { JudgementCounter } from "./sprites/judgementCounter";
 import { ArrowKey } from "./sprites/key/arrowKey";
@@ -212,8 +211,9 @@ export class Game {
         this.settings.darkerHoldNotes,
       )[this.difficulty.keyCount - 1];
     } else {
-      this.laneColors =
-        this.settings.skin.colors.custom[this.difficulty.keyCount - 1];
+      this.laneColors = patchLaneColors(
+        this.settings.skin.colors.custom[this.difficulty.keyCount - 1],
+      );
     }
 
     this.laneArrowDirections =
@@ -259,7 +259,10 @@ export class Game {
       this.tapClass = CircleTap;
       this.holdClass = CircleHold;
       this.keyClass = CircleKey;
-    } else if (this.settings.style === "arrows") {
+    } else if (
+      this.settings.style === "arrows" ||
+      this.settings.style === "thickArrows"
+    ) {
       this.tapClass = ArrowTap;
       this.holdClass = ArrowHold;
       this.keyClass = ArrowKey;
@@ -997,10 +1000,6 @@ export class Game {
     for (const column of this.columns) {
       for (const hitObject of column) {
         hitObject.view.visible = false;
-
-        if (hitObject instanceof Hold) {
-          hitObject.resetHeight();
-        }
       }
     }
 
