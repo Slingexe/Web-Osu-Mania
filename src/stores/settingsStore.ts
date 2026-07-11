@@ -189,6 +189,7 @@ export type Settings = {
   errorBarScale: number;
   preferMetadataInOriginalLanguage: boolean;
   unpauseDelay: number;
+  breakMinDuration: number;
   hideBeatmapSetCovers: boolean;
   retryOnFail: boolean;
   performanceMode: boolean;
@@ -254,6 +255,7 @@ export type Settings = {
     showProgressBar?: boolean; // Old, replaced by progressDisplay
     showHealthBar: boolean;
     receptorOpacity: number;
+    receptorLighting: boolean;
     judgementCounter: JudgementCounterPosition | null;
     progressDisplay: ProgressDisplay | null;
     stageHudYPosition: number;
@@ -303,6 +305,7 @@ export const defaultSettings: Settings = {
   errorBarScale: 1,
   preferMetadataInOriginalLanguage: false,
   unpauseDelay: 1500,
+  breakMinDuration: 5000,
   hideBeatmapSetCovers: false,
   retryOnFail: false,
   performanceMode: false,
@@ -575,6 +578,7 @@ export const defaultSettings: Settings = {
     showProgressBar: true,
     showHealthBar: true,
     receptorOpacity: 1,
+    receptorLighting: true,
     judgementCounter: "right",
     progressDisplay: "bar",
     stageHudYPosition: 0.66,
