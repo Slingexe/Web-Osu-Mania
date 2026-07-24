@@ -34,11 +34,11 @@ export async function downloadBackup(
   }
 
   if (selectedData.includes("highScoresAndReplays")) {
-    addLocalStorageFileToZip(zipWriter, "highScores");
+    await addIdbUserDataToZip(zipWriter, "highScores");
   }
 
   if (selectedData.includes("storedBeatmapSets")) {
-    addLocalStorageFileToZip(zipWriter, "storedBeatmapSets");
+    await addIdbUserDataToZip(zipWriter, "storedBeatmapSets");
   }
 
   // IndexedDB
@@ -90,6 +90,15 @@ function addLocalStorageFileToZip(
   }
 
   zipWriter.add(`${localStorageKey}.json`, new TextReader(data));
+}
+
+async function addIdbUserDataToZip(zipWriter: ZipWriter<unknown>, key: string) {
+  const db = await idb.db;
+  const data = await db.get("userData", key);
+
+  if (data) {
+    zipWriter.add(`${key}.json`, new TextReader(data));
+  }
 }
 
 async function addIdbStoreToZip(
@@ -210,16 +219,16 @@ export async function importBackup(zipBlob: File) {
     toast("Backup imported successfully", {
       description: createElement("ul", { className: "list-inside list-disc" }, [
         ...(hasSettings
-          ? [createElement("li", {}, "Settings & Keybinds")]
+          ? [createElement("li", { key: "1" }, "Settings & Keybinds")]
           : []),
         ...(hasHighScores
-          ? [createElement("li", {}, "Highscores & Replays")]
+          ? [createElement("li", { key: "2" }, "Highscores & Replays")]
           : []),
         ...(collectionCount !== null
           ? [
               createElement(
                 "li",
-                {},
+                { key: "3" },
                 `${collectionCount} Collection${collectionCount > 1 ? "s" : ""}`,
               ),
             ]
@@ -228,7 +237,7 @@ export async function importBackup(zipBlob: File) {
           ? [
               createElement(
                 "li",
-                {},
+                { key: "4" },
                 `${storedBeatmapCount} Stored Beatmap${storedBeatmapCount > 1 ? "s" : ""}`,
               ),
             ]
