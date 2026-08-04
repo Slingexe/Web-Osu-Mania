@@ -80,6 +80,7 @@ export class InputSystem {
     this.game.columns[column][this.game.currentColumnIndices[column]]?.hit(
       timeElapsed,
     );
+    this.game.kpsCounter?.addKeypress(timeElapsed ?? this.game.timeElapsed);
   }
 
   public release(column: number, timeElapsed?: number) {
@@ -195,9 +196,9 @@ export class InputSystem {
 
     if (this.game.replayPlayer && event.code === "Space") {
       if (this.game.song.playing()) {
-        this.game.song.pause();
+        this.game.pause();
       } else {
-        this.game.song.play();
+        this.game.resume();
       }
 
       return;
