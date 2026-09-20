@@ -45,7 +45,21 @@ const BeatmapList = ({
     <div className="flex max-h-125 flex-col overflow-hidden rounded-xl">
       {beatmapSet.play_count != null && (
         <div className="bg-background p-2 text-sm">
-          <div className="flex justify-center gap-4 font-mono">
+          <div className="flex items-center justify-center gap-1 text-sm font-bold">
+            <img
+              src={`https://a.ppy.sh/${beatmapSet.user_id}`}
+              className="size-8 rounded-full border"
+            />
+
+            <TextLink
+              to={`https://osu.ppy.sh/users/${beatmapSet.user_id}`}
+              target="_blank"
+            >
+              {beatmapSet.creator}
+            </TextLink>
+          </div>
+
+          <div className="mt-1 flex justify-center gap-4 font-mono">
             <div className="flex items-center gap-1">
               <Play className="size-4" />
               <span className="text-muted-foreground">
@@ -68,7 +82,7 @@ const BeatmapList = ({
             </div>
           </div>
 
-          <div className="mt-2 flex flex-wrap justify-center gap-1 text-xs">
+          <div className="mt-1 flex flex-wrap justify-center gap-1 text-xs">
             <span className="bg-primary/25 inline-flex items-center gap-1 rounded-full px-3 py-0.5">
               <Tag className="size-3" /> {genre}
             </span>
