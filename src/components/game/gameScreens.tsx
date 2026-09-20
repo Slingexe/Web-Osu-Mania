@@ -29,6 +29,10 @@ const GameScreens = ({
   showHud: boolean;
   setShowHud: Dispatch<SetStateAction<boolean>>;
 }) => {
+  const backgroundDim = useSettingsStore.use.backgroundDim();
+  const backgroundBlur = useSettingsStore.use.backgroundBlur();
+  const lightenBackgroundDuringBreaks =
+    useSettingsStore.use.lightenBackgroundDuringBreaks();
   const beatmapId = useGameStore.use.beatmapId();
   const keybinds = useSettingsStore.use.keybinds();
   const [game, setGame] = useState<Game | null>(null);
@@ -67,8 +71,9 @@ const GameScreens = ({
       retry,
       videoEl,
     );
-    setGame(gameInstance);
-    gameInstance.main(containerRef.current, initialShowHud.current);
+    gameInstance
+      .main(containerRef.current, initialShowHud.current)
+      .then(() => setGame(gameInstance));
 
     return () => {
       Howler.stop();
@@ -137,8 +142,26 @@ const GameScreens = ({
     };
   }, [keybinds, results, toggleHud]);
 
+  const initialBackgroundDim = lightenBackgroundDuringBreaks
+    ? backgroundDim * 0.5
+    : backgroundDim;
+
   return (
     <>
+      {beatmapData.backgroundUrl && !beatmapData.videoUrl && (
+        <img
+          src={beatmapData.backgroundUrl}
+          alt="Beatmap Background"
+          className="h-full w-full object-cover select-none"
+          style={{
+            filter: game
+              ? `blur(${backgroundBlur * 30}px)`
+              : // The dim must be temporarily applied here before the PIXI app loads
+                `brightness(${1 - initialBackgroundDim}) blur(${backgroundBlur * 30}px)`,
+          }}
+        />
+      )}
+
       <div
         ref={containerRef}
         className={cn(
