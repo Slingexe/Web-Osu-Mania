@@ -27,6 +27,10 @@ export const Route = createRootRoute({
         content: "width=device-width, initial-scale=1",
       },
       {
+        name: "apple-mobile-web-app-title",
+        content: "Web osu!mania",
+      },
+      {
         name: "google-site-verification",
         content: "ewJX1E1zwNcx0NgBxQfHwOkQduww8reYJX3rIZZyb40",
       },
@@ -42,10 +46,26 @@ export const Route = createRootRoute({
       },
     ],
     links: [
-      { rel: "icon", href: "/favicon.ico" },
+      {
+        rel: "icon",
+        type: "image/png",
+        href: "/favicon-96x96.png",
+        sizes: "96x96",
+      },
+      { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+      { rel: "shortcut icon", href: "/favicon.ico" },
+      {
+        rel: "apple-touch-icon",
+        sizes: "180x180",
+        href: "/apple-touch-icon.png",
+      },
       {
         rel: "stylesheet",
         href: appCss,
+      },
+      {
+        rel: "manifest",
+        href: "/site.webmanifest",
       },
     ],
   }),
