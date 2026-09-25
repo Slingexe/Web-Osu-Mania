@@ -162,6 +162,7 @@ export type Settings = {
     // There may be more options to convert FLV and AVI later
     enabled: boolean;
   };
+  lightenBackgroundDuringBreaks: boolean;
   show300g: boolean;
   showErrorBar: boolean;
   audioOffset: number;
@@ -295,6 +296,7 @@ export const defaultSettings: Settings = {
   backgroundVideo: {
     enabled: true,
   },
+  lightenBackgroundDuringBreaks: true,
   show300g: true,
   showErrorBar: true,
   audioOffset: 0,

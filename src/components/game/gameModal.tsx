@@ -21,7 +21,6 @@ const GameModal = () => {
     (settings) => settings.storeDownloadedBeatmaps,
   );
   const backgroundDim = useSettingsStore.use.backgroundDim();
-  const backgroundBlur = useSettingsStore.use.backgroundBlur();
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const getBeatmapSet = useBeatmapSetCacheStore.use.getBeatmapSet();
   const storedBeatmapSets = useStoredBeatmapSetsStore.use.storedBeatmapSets();
@@ -205,17 +204,6 @@ const GameModal = () => {
       )}
       {beatmapData && (
         <>
-          {beatmapData.backgroundUrl && !beatmapData.videoUrl && (
-            <img
-              src={beatmapData.backgroundUrl}
-              alt="Beatmap Background"
-              className="-z-1 h-full w-full object-cover select-none"
-              style={{
-                filter: `brightness(${1 - backgroundDim}) blur(${backgroundBlur * 30}px)`,
-              }}
-            />
-          )}
-
           {beatmapData.videoUrl && (
             <video
               ref={videoRef}

@@ -83,6 +83,27 @@ export class Countdown {
     // Linearly fade from 500ms to 0ms remaining
     this.view.alpha = clamp(remainingTime / 500, 0, 1);
 
+    if (this.game.settings.lightenBackgroundDuringBreaks) {
+      if (
+        this.game.timeElapsed > this.game.startTime &&
+        remainingTime > maxTime - 1000
+      ) {
+        // Lighten background as the break begins
+        this.game.app.renderer.background.alpha =
+          this.game.settings.backgroundDim -
+          clamp((maxTime - remainingTime - 500) / 500, 0, 1) *
+            this.game.settings.backgroundDim *
+            0.5;
+      } else {
+        // Darken background as the break ends
+        this.game.app.renderer.background.alpha =
+          this.game.settings.backgroundDim -
+          clamp((remainingTime - 500) / 500, 0, 1) *
+            this.game.settings.backgroundDim *
+            0.5;
+      }
+    }
+
     // Hide skip when under 2 seconds left
     const canSkip = this.game.timeElapsed < this.game.startTime - 2000;
     if (!canSkip) {
@@ -106,6 +127,8 @@ export class Countdown {
   public updateBreak() {
     if (!this.break) {
       this.view.alpha = 0;
+      this.game.app.renderer.background.alpha =
+        this.game.settings.backgroundDim;
       return;
     }
 

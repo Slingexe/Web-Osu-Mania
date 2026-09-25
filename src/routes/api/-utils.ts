@@ -69,6 +69,7 @@ export function trimBeatmapSet(beatmapSet: BeatmapSet): BeatmapSet {
     status: beatmapSet.status,
     title: beatmapSet.title,
     title_unicode: beatmapSet.title_unicode,
+    user_id: beatmapSet.user_id,
     play_count: beatmapSet.play_count,
     favourite_count: beatmapSet.favourite_count,
     rating: beatmapSet.rating,

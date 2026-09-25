@@ -485,10 +485,16 @@ export class Game {
 
   async main(ref: HTMLDivElement, showHud: boolean) {
     extensions.remove(ResizePlugin);
+
+    const initialBackgroundAlpha = this.settings.lightenBackgroundDuringBreaks
+      ? this.settings.backgroundDim * 0.5
+      : this.settings.backgroundDim;
+
     await this.app.init({
       width: window.innerWidth,
       height: window.innerHeight,
-      backgroundAlpha: 0,
+      backgroundAlpha: initialBackgroundAlpha,
+      backgroundColor: "black",
       antialias: !this.settings.performanceMode,
       autoDensity: true,
       resolution: window.devicePixelRatio,

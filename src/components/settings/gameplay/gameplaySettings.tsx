@@ -86,6 +86,20 @@ const GameplaySettings = ({ title, searchQuery }: SettingsSectionProps) => {
           ),
         },
         {
+          label: "Lighten Background During Breaks",
+          render: ({ label }) => (
+            <SwitchInput
+              label={label}
+              settingPath="lightenBackgroundDuringBreaks"
+              onCheckedChange={(checked) =>
+                setSettings((draft) => {
+                  draft.lightenBackgroundDuringBreaks = checked;
+                })
+              }
+            />
+          ),
+        },
+        {
           label: "Scroll Speed",
           render: ({ label }) => (
             <SliderInput
