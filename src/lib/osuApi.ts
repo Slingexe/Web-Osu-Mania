@@ -83,6 +83,7 @@ export type BeatmapSet = {
   title: string;
   title_unicode: string;
   user_id?: number; // Undefined for local beatmap sets
+  track_id?: number;
   // video: boolean;
 
   play_count?: number;

@@ -81,16 +81,36 @@ const BeatmapSetCover = ({
       {/* Details */}
       <div className="mt-auto">
         <div className="flex items-center gap-1.5">
-          {beatmapSet.status && (
-            <div
-              className={cn(
-                "w-fit rounded-full px-1.5 text-xs font-bold",
-                getStatusClass(beatmapSet.status),
-              )}
-            >
-              {beatmapSet.status.toUpperCase()}
-            </div>
-          )}
+          <div className="flex items-center gap-1">
+            {beatmapSet.status && (
+              <div
+                className={cn(
+                  "w-fit rounded-full px-1.5 text-xs font-bold",
+                  getStatusClass(beatmapSet.status),
+                )}
+              >
+                {beatmapSet.status.toUpperCase()}
+              </div>
+            )}
+
+            {beatmapSet.nsfw && (
+              <div
+                className="flex items-center justify-center rounded-sm bg-[#22282a] px-1 text-xs font-bold text-[#ebc247]"
+                title="Explicit"
+              >
+                E
+              </div>
+            )}
+
+            {beatmapSet.track_id != null && (
+              <div
+                className="flex items-center justify-center rounded-sm bg-[#22282a] px-1 text-xs font-bold text-[#47b4eb]"
+                title="Featured Artist"
+              >
+                FA
+              </div>
+            )}
+          </div>
 
           {/* Difficulty dots */}
           <div className="flex gap-0.5">
