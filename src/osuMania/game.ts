@@ -11,7 +11,6 @@ import type {
 import { idb } from "@/lib/idb";
 import { decodeMods } from "@/lib/replay";
 import {
-  BASE_PATH,
   createObjectURLWithExtension,
   patchLaneColors,
   scaleWidth,
@@ -36,6 +35,7 @@ import {
 } from "pixi.js";
 import type { Dispatch, SetStateAction } from "react";
 import {
+  BASE_ASSETS_URL,
   MAX_TIME_RANGE,
   getAllLaneColors,
   laneArrowDirections,
@@ -259,10 +259,7 @@ export class Game {
       this.tapClass = CircleTap;
       this.holdClass = CircleHold;
       this.keyClass = CircleKey;
-    } else if (
-      this.settings.style === "arrows" ||
-      this.settings.style === "thickArrows"
-    ) {
+    } else if (this.settings.style === "arrows") {
       this.tapClass = ArrowTap;
       this.holdClass = ArrowHold;
       this.keyClass = ArrowKey;
@@ -530,6 +527,8 @@ export class Game {
     DiamondHold.tailGraphicsContext = null;
     ArrowHold.tailGraphicsContext = null;
     StageLight.graphicsContext = null;
+
+    this.tapClass.setTextures(this);
 
     if (this.replayPlayer) {
       this.addReplayText();
@@ -1111,7 +1110,7 @@ export class Game {
       }
     } else if (applauseFile) {
       new Howl({
-        src: [`${BASE_PATH}/skin/sounds/applause/${applauseFile}`],
+        src: [`${BASE_ASSETS_URL}/skin/sounds/applause/${applauseFile}`],
         preload: true,
         autoplay: true,
         onloaderror: (_, error) => {
@@ -1166,7 +1165,7 @@ export class Game {
       }
     } else if (failFile) {
       new Howl({
-        src: [`${BASE_PATH}/skin/sounds/fail/${failFile}`],
+        src: [`${BASE_ASSETS_URL}/skin/sounds/fail/${failFile}`],
         preload: true,
         autoplay: true,
         onloaderror: (_, error) => {

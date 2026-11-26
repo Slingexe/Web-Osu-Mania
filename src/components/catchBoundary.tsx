@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import type { ErrorComponentProps } from "@tanstack/react-router";
 import { Link } from "@tanstack/react-router";
 
-const CatchBoundary = ({ error, reset }: ErrorComponentProps) => {
+const CatchBoundary = ({ error, reset }: ErrorComponentProps<any>) => {
   return (
     <>
       <div className="p-6 text-center">
@@ -11,7 +11,7 @@ const CatchBoundary = ({ error, reset }: ErrorComponentProps) => {
         </h1>
 
         <p className="text-muted-foreground mt-1 text-balance">
-          {error.message}
+          {error instanceof Error ? error.message : String(error)}
         </p>
 
         <Button asChild className="mt-5">
